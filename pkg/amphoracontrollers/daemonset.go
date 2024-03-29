@@ -83,6 +83,8 @@ func DaemonSet(
 
 	envVars["KOLLA_CONFIG_STRATEGY"] = env.SetValue("COPY_ALWAYS")
 	envVars["CONFIG_HASH"] = env.SetValue(configHash)
+	envVars["NODE_NAME"] = env.DownwardAPI("spec.nodeName")
+	envVars["POD_IP"] = env.DownwardAPI("status.podIP")
 
 	// Add the CA bundle
 	if instance.Spec.TLS.CaBundleSecretName != "" {
@@ -115,6 +117,21 @@ func DaemonSet(
 							Resources:      instance.Spec.Resources,
 							ReadinessProbe: readinessProbe,
 							LivenessProbe:  livenessProbe,
+							SecurityContext: &corev1.SecurityContext{
+								Capabilities: &corev1.Capabilities{
+									Add:  []corev1.Capability{"NET_ADMIN", "SYS_ADMIN", "SYS_NICE"},
+									Drop: []corev1.Capability{},
+								},
+								RunAsUser:  &runAsUser,
+								Privileged: &privileged,
+							},
+						},
+						{
+							Name:         "utils",
+							Image:        "quay.io/gthiemonge/centos:netutils",
+							Env:          env.MergeEnvs([]corev1.EnvVar{}, envVars),
+							VolumeMounts: volumeMounts,
+							Resources:    instance.Spec.Resources,
 							SecurityContext: &corev1.SecurityContext{
 								Capabilities: &corev1.Capabilities{
 									Add:  []corev1.Capability{"NET_ADMIN", "SYS_ADMIN", "SYS_NICE"},

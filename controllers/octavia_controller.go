@@ -617,6 +617,14 @@ func (r *OctaviaReconciler) reconcileNormal(ctx context.Context, instance *octav
 	// Amphora reconciliation
 	// ------------------------------------------------------------------------------------------------------------
 
+	// Get a list of the nodes in the cluster
+	nodes, _ := helper.GetKClient().CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	for _, node := range nodes.Items {
+		Log.Info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+		Log.Info(fmt.Sprintf("cluster node name %s", node.Name))
+		Log.Info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+	}
+
 	// Create load balancer management network and get its Id (networkInfo is actually a struct and contains
 	// multiple details.
 	networkInfo, err := octavia.EnsureAmphoraManagementNetwork(
